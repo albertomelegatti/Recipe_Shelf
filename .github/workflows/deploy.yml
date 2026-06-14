@@ -3,20 +3,25 @@ name: Deploy to EC2
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
       
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
           script: |
-            cd /home/ec2-user/Recipe_Shelf
+            cd /home/${{ secrets.EC2_USER }}/Recipe_Shelf
             git pull origin main
+            sudo pip3 install -r requirements.txt 2>/dev/null || true
             sudo systemctl restart recipe-shelf
